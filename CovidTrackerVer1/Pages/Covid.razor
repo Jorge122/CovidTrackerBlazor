@@ -1,0 +1,200 @@
+﻿@page "/Covid"
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using MathNet.Numerics
+
+<h1>Covid forecast</h1>
+
+<p>This component demonstrates fetching data from the server.</p>
+
+@if (averages == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>New Count</th>
+                <th>Total Count</th>
+                <th>New Deaths</th>
+                <th>Total Death</th>
+                <th>County</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var record in response.result.records)
+            {
+                <tr>
+                    <td>@record.newcountconfirmed</td>
+                    <td>@record.totalcountconfirmed</td>
+                    <td>@record.newcountdeaths</td>
+                    <td>@record.totalcountdeaths</td>
+                    <td>@record.county</td>
+                    <td>@record.date.ToShortDateString()</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Average</th>
+                <th>Date Number</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var test in averages)
+            {
+
+                Console.WriteLine(test.avg);
+                <tr>
+                    <td>@test.date.ToShortDateString()</td>
+                    <td>@test.avg</td>
+                    <td>@test.dateNum</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <p>Intercept = @slope.Item1</p>
+    <p>Slope = @slope.Item2</p>
+    <p>The current trend is:</p>
+    @if (slope.Item2 > 3)
+    {
+        <p>Aggresivly Increasing</p>
+    }
+    else if (slope.Item2 > 0.9)
+    {
+        <p>Increasing</p>
+    }
+    else if (slope.Item2 < -0.9)
+    {
+
+        <p>Decreasing</p>
+    }
+    else if (slope.Item2 < -3)
+    {
+        <p>Aggresivly Decreasing</p>
+    }
+    else
+    {
+        <p>Plateau</p>
+    }
+}
+<canvas id="myChart"></canvas>
+
+
+
+
+@code {
+    private CovidQueryResponse response;
+    private List<SevenDayAvg> averages;
+    private Tuple<double, double> slope;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        response = await Http.GetFromJsonAsync<CovidQueryResponse>("https://data.ca.gov/api/3/action/datastore_search_sql?sql=SELECT * from \"926fd08f-cc91-4828-af38-bd45de97f8c3\" WHERE \"county\" LIKE 'Alameda'");
+        averages = GetSevenDayAvg(response.result.records);
+        slope = GetSlope(averages);
+        Console.WriteLine(averages[0].avg);
+        await GenerateGraph();
+    }
+
+    protected async Task GenerateGraph()
+    {
+        await JSRuntime.InvokeVoidAsync("makeGraph");
+    }
+
+    public Tuple<double, double> GetSlope(List<SevenDayAvg> averages)
+    {
+        int count = 0;
+        double[] avgs = new double[7];
+        double[] days = new double[7];
+        for (int i = averages.Count - 7; i < averages.Count; i++)
+        {
+            avgs[count] = averages[i].avg;
+            days[count] = averages[i].dateNum;
+            count++;
+        }
+
+        Tuple<double, double> p = Fit.Line(days, avgs);
+
+        double a = p.Item1; // == 10; intercept
+        double b = p.Item2; // == 0.5; slope
+
+        return p;
+    }
+
+    public List<SevenDayAvg> GetSevenDayAvg(Records[] records)
+    {
+        double count = 1;
+        List<SevenDayAvg> avgs = new List<SevenDayAvg>();
+        for (int i = 3; i < (records.Length - 3); i++)
+        {
+
+            double sum = Convert.ToDouble(records[i - 3].newcountconfirmed) +
+                 Convert.ToDouble(records[i - 2].newcountconfirmed) +
+                 Convert.ToDouble(records[i - 1].newcountconfirmed) +
+                 Convert.ToDouble(records[i].newcountconfirmed) +
+                 Convert.ToDouble(records[i + 1].newcountconfirmed) +
+                 Convert.ToDouble(records[i + 2].newcountconfirmed) +
+                 Convert.ToDouble(records[i + 3].newcountconfirmed);
+
+            double total = sum / 7;
+
+            avgs.Add(new SevenDayAvg { date = records[i].date, avg = total, dateNum = count });
+            count++;
+
+        }
+        return avgs;
+    }
+
+    public class SevenDayAvg
+    {
+        public DateTime date { get; set; }
+        public double avg { get; set; }
+        public double dateNum { get; set; }
+
+    }
+    public class CovidQueryResponse
+    {
+        public string help { get; set; }
+
+        public bool success { get; set; }
+
+        public Result result { get; set; }
+
+        public Field[] fields { get; set; }
+
+        public string sql { get; set; }
+    }
+
+    public class Result
+    {
+        public Records[] records { get; set; }
+    }
+
+    public class Records
+    {
+        public int _id { get; set; }
+        public string _full_text { get; set; }
+        public string county { get; set; }
+        public string totalcountconfirmed { get; set; }
+        public string totalcountdeaths { get; set; }
+        public string newcountconfirmed { get; set; }
+        public string newcountdeaths { get; set; }
+        public DateTime date { get; set; }
+
+    }
+
+    public class Field
+    {
+        public string type { get; set; }
+        public string id { get; set; }
+    }
+
+}
