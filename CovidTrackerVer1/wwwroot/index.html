@@ -9,7 +9,7 @@
     <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
     <link href="css/app.css" rel="stylesheet" />
     <script>
-        window.makeGraph = () => {
+        window.makeGraph = (labels,data) => {
             var ctx = document.getElementById('myChart').getContext('2d');
             var chart = new Chart(ctx, {
                 // The type of chart we want to create
@@ -17,14 +17,18 @@
 
                 // The data for our dataset
                 data: {
-                    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                    /*labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],*/
+                    labels: labels,
                     datasets: [{
-                        label: 'My First dataset',
-                        backgroundColor: 'rgb(255, 99, 132)',
-                        borderColor: 'rgb(255, 99, 132)',
-                        data: [0, 10, 5, 2, 20, 30, 45]
+                        label: '7-day averages for the past week',
+                        backgroundColor: 'rgb(0, 0, 0)',
+                        borderColor: 'rgb(0, 0, 0)',
+                        /*data: [0, 10, 5, 2, 20, 30, 45]*/
+                        data: data,
+                        fill: false
                     }]
                 },
+                
 
                 // Configuration options go here
                 options: {}

@@ -7,12 +7,40 @@
 
 <p>This component demonstrates fetching data from the server.</p>
 
+
+
+<canvas id="myChart"></canvas>
+
 @if (averages == null)
 {
     <p><em>Loading...</em></p>
 }
 else
 {
+    <p>Intercept = @slope.Item1</p>
+    <p>Slope = @slope.Item2</p>
+    <p>The current trend is:</p>
+    @if (slope.Item2 > 3)
+    {
+        <p>Aggresivly Increasing</p>
+    }
+    else if (slope.Item2 > 0.9)
+    {
+        <p>Increasing</p>
+    }
+    else if (slope.Item2 < -0.9)
+    {
+
+        <p>Decreasing</p>
+    }
+    else if (slope.Item2 < -3)
+    {
+        <p>Aggresivly Decreasing</p>
+    }
+    else
+    {
+        <p>Plateau</p>
+    }    
     <table class="table">
         <thead>
             <tr>
@@ -59,32 +87,7 @@ else
             }
         </tbody>
     </table>
-    <p>Intercept = @slope.Item1</p>
-    <p>Slope = @slope.Item2</p>
-    <p>The current trend is:</p>
-    @if (slope.Item2 > 3)
-    {
-        <p>Aggresivly Increasing</p>
-    }
-    else if (slope.Item2 > 0.9)
-    {
-        <p>Increasing</p>
-    }
-    else if (slope.Item2 < -0.9)
-    {
-
-        <p>Decreasing</p>
-    }
-    else if (slope.Item2 < -3)
-    {
-        <p>Aggresivly Decreasing</p>
-    }
-    else
-    {
-        <p>Plateau</p>
-    }
 }
-<canvas id="myChart"></canvas>
 
 
 
@@ -106,7 +109,17 @@ else
 
     protected async Task GenerateGraph()
     {
-        await JSRuntime.InvokeVoidAsync("makeGraph");
+        string[] labels = new string[7];
+        double[] data = new double[7];
+        int count = 0;
+        for (int i = averages.Count - 7; i < averages.Count; i++)
+        {
+            labels[count] = averages[i].date.ToShortDateString();
+            data[count] = averages[i].avg;
+            count++;
+        }
+
+        await JSRuntime.InvokeVoidAsync("makeGraph", labels, data);
     }
 
     public Tuple<double, double> GetSlope(List<SevenDayAvg> averages)
