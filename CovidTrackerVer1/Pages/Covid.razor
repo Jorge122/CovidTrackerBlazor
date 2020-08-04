@@ -2,6 +2,15 @@
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
 @using MathNet.Numerics
+<style>
+.color-box {
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+    background-color: #ccc;
+
+}
+</style>
 
 <h1>Covid forecast</h1>
 
@@ -10,6 +19,9 @@
 
 
 <canvas id="myChart"></canvas>
+<canvas id="myDailyChart"></canvas>
+
+
 
 @if (averages == null)
 {
@@ -17,6 +29,25 @@
 }
 else
 {
+    <p> Increasing: <span class="color-box" style="background-color: #FF850A;"></span></p>
+    <p> Decreasing: <span class="color-box" style="background-color: navy;"></span></p>
+    <ul>
+        <li>
+            <div class="input-color">
+                <input type="text" value="Orange" />
+                <div class="color-box" style="background-color: #FF850A;"></div>
+                <!-- Replace "#FF850A" to change the color -->
+            </div>
+        </li>
+        <li>
+            <div class="input-color">
+                <input type="text" value="Navy blue" />
+                <div class="color-box" style="background-color: navy;"></div>
+                <!-- Replace "navy" to change the color -->
+            </div>
+        </li>
+    </ul>
+
     <p>Intercept = @slope.Item1</p>
     <p>Slope = @slope.Item2</p>
     <p>The current trend is:</p>
@@ -24,23 +55,23 @@ else
     {
         <p>Aggresivly Increasing</p>
     }
-    else if (slope.Item2 > 0.9)
+    else if (slope.Item2 > 1.2)
     {
         <p>Increasing</p>
-    }
-    else if (slope.Item2 < -0.9)
-    {
-
-        <p>Decreasing</p>
     }
     else if (slope.Item2 < -3)
     {
         <p>Aggresivly Decreasing</p>
     }
+    else if (slope.Item2 < -1.2)
+    {
+
+        <p>Decreasing</p>
+    }
     else
     {
         <p>Plateau</p>
-    }    
+    }
     <table class="table">
         <thead>
             <tr>
@@ -105,6 +136,7 @@ else
         slope = GetSlope(averages);
         Console.WriteLine(averages[0].avg);
         await GenerateGraph();
+        await GenerateDailyGraph(response.result.records);
     }
 
     protected async Task GenerateGraph()
@@ -120,6 +152,21 @@ else
         }
 
         await JSRuntime.InvokeVoidAsync("makeGraph", labels, data);
+    }
+
+    protected async Task GenerateDailyGraph(Records[] records)
+    {
+        string[] labels = new string[14];
+        double[] data = new double[14];
+        int count = 0;
+        for (int i = records.Length - 14; i < records.Length; i++)
+        {
+            labels[count] = records[i].date.ToShortDateString();
+            data[count] = Convert.ToDouble(records[i].newcountconfirmed);
+            count++;
+        }
+
+        await JSRuntime.InvokeVoidAsync("makeDailyGraph", labels, data);
     }
 
     public Tuple<double, double> GetSlope(List<SevenDayAvg> averages)

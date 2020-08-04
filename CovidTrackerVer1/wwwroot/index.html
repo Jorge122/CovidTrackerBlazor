@@ -9,7 +9,7 @@
     <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
     <link href="css/app.css" rel="stylesheet" />
     <script>
-        window.makeGraph = (labels,data) => {
+        window.makeGraph = (labels, data) => {
             var ctx = document.getElementById('myChart').getContext('2d');
             var chart = new Chart(ctx, {
                 // The type of chart we want to create
@@ -28,12 +28,39 @@
                         fill: false
                     }]
                 },
-                
+
 
                 // Configuration options go here
                 options: {}
             });
-        }</script>
+        }
+            window.makeDailyGraph = (labels, data) => {
+                var ctx = document.getElementById('myDailyChart').getContext('2d');
+                var chart = new Chart(ctx, {
+                    // The type of chart we want to create
+                    type: 'line',
+
+                    // The data for our dataset
+                    data: {
+                        /*labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],*/
+                        labels: labels,
+                        datasets: [{
+                            label: 'Number of New Cases for past week',
+                            backgroundColor: 'rgb(0, 0, 0)',
+                            borderColor: 'rgb(0, 0, 0)',
+                            /*data: [0, 10, 5, 2, 20, 30, 45]*/
+                            data: data,
+                            fill: false
+                        }]
+                    },
+
+
+                    // Configuration options go here
+                    options: {}
+                });
+            }
+            
+        </script>
 </head>
 
 <body>
