@@ -3,13 +3,16 @@
 @inject IJSRuntime JSRuntime
 @using MathNet.Numerics
 <style>
-.color-box {
-    width: 10px;
-    height: 10px;
-    display: inline-block;
-    background-color: #ccc;
 
-}
+
+
+
+    .color-box {
+        width: 10px;
+        height: 10px;
+        display: inline-block;
+        background-color: #ccc;
+    }
 </style>
 
 <h1>Covid forecast</h1>
@@ -18,9 +21,10 @@
 
 
 
+
+
 <canvas id="myChart"></canvas>
 <canvas id="myDailyChart"></canvas>
-
 
 
 @if (averages == null)
@@ -29,8 +33,10 @@
 }
 else
 {
+    /*
     <p> Increasing: <span class="color-box" style="background-color: #FF850A;"></span></p>
     <p> Decreasing: <span class="color-box" style="background-color: navy;"></span></p>
+
     <ul>
         <li>
             <div class="input-color">
@@ -43,10 +49,17 @@ else
             <div class="input-color">
                 <input type="text" value="Navy blue" />
                 <div class="color-box" style="background-color: navy;"></div>
-                <!-- Replace "navy" to change the color -->
+                <!-- Replace "navy" to change the color-->
             </div>
         </li>
     </ul>
+    */
+
+    <label> Select a county</label>
+    <select @onchange="DoStuff">
+        <option value="Alameda">Alameda</option>
+        <option value="Santa Clara">Santa Clara</option>
+    </select>
 
     <p>Intercept = @slope.Item1</p>
     <p>Slope = @slope.Item2</p>
@@ -109,7 +122,7 @@ else
             @foreach (var test in averages)
             {
 
-                Console.WriteLine(test.avg);
+
                 <tr>
                     <td>@test.date.ToShortDateString()</td>
                     <td>@test.avg</td>
@@ -127,16 +140,19 @@ else
     private CovidQueryResponse response;
     private List<SevenDayAvg> averages;
     private Tuple<double, double> slope;
+    private string county = "Alameda";
 
     protected override async Task OnInitializedAsync()
     {
-
-        response = await Http.GetFromJsonAsync<CovidQueryResponse>("https://data.ca.gov/api/3/action/datastore_search_sql?sql=SELECT * from \"926fd08f-cc91-4828-af38-bd45de97f8c3\" WHERE \"county\" LIKE 'Alameda'");
+        var request = "https://data.ca.gov/api/3/action/datastore_search_sql?sql=SELECT * from \"926fd08f-cc91-4828-af38-bd45de97f8c3\" WHERE \"county\" LIKE '" + county + "'";
+        Console.WriteLine(request);
+        response = await Http.GetFromJsonAsync<CovidQueryResponse>(request);
+        Console.WriteLine(response.result.records[0].county);
         averages = GetSevenDayAvg(response.result.records);
         slope = GetSlope(averages);
-        Console.WriteLine(averages[0].avg);
         await GenerateGraph();
         await GenerateDailyGraph(response.result.records);
+        StateHasChanged();
     }
 
     protected async Task GenerateGraph()
@@ -211,6 +227,12 @@ else
 
         }
         return avgs;
+    }
+
+    private async void DoStuff(ChangeEventArgs e)
+    {
+        county = e.Value.ToString();
+        await OnInitializedAsync();
     }
 
     public class SevenDayAvg
