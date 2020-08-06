@@ -3,11 +3,7 @@
 @inject IJSRuntime JSRuntime
 @using MathNet.Numerics
 <style>
-
-
-
-
-    .color-box {
+color-box {
         width: 10px;
         height: 10px;
         display: inline-block;
@@ -22,9 +18,10 @@
 
 
 
-
-<canvas id="myChart"></canvas>
-<canvas id="myDailyChart"></canvas>
+<div id="chart-container" name="chart-container">
+    <canvas id="myChart"></canvas>
+    <canvas id="myDailyChart"></canvas>
+</div>
 
 
 @if (averages == null)
@@ -59,6 +56,13 @@ else
     <select @onchange="DoStuff">
         <option value="Alameda">Alameda</option>
         <option value="Santa Clara">Santa Clara</option>
+        <option value="Contra Costa">Contra Costa</option>
+        <option value="San Francisco">San Francisco</option>
+        <option value="San Mateo">San Mateo</option>
+        <option value="Marin">Marin</option>
+        <option value="Sonoma">Sonoma</option>
+        <option value="Napa">Napa</option>
+        <option value="Solano">Solano</option>
     </select>
 
     <p>Intercept = @slope.Item1</p>
@@ -159,15 +163,17 @@ else
     {
         string[] labels = new string[7];
         double[] data = new double[7];
+        double[] line = new double[7];
         int count = 0;
         for (int i = averages.Count - 7; i < averages.Count; i++)
         {
             labels[count] = averages[i].date.ToShortDateString();
             data[count] = averages[i].avg;
+            line[count] = (averages[i].dateNum * slope.Item2) + slope.Item1; 
             count++;
         }
 
-        await JSRuntime.InvokeVoidAsync("makeGraph", labels, data);
+        await JSRuntime.InvokeVoidAsync("makeGraph", labels, data, line);
     }
 
     protected async Task GenerateDailyGraph(Records[] records)
@@ -245,13 +251,9 @@ else
     public class CovidQueryResponse
     {
         public string help { get; set; }
-
         public bool success { get; set; }
-
         public Result result { get; set; }
-
         public Field[] fields { get; set; }
-
         public string sql { get; set; }
     }
 

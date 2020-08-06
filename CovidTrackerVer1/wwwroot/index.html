@@ -9,7 +9,15 @@
     <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
     <link href="css/app.css" rel="stylesheet" />
     <script>
-        window.makeGraph = (labels, data) => {
+        window.makeGraph = (labels, data, line) => {
+            document.getElementById("myChart").remove();
+            let canvas = document.createElement('canvas');
+            canvas.setAttribute('id', 'myChart');
+           // canvas.setAttribute('width', '300');
+           // canvas.setAttribute('height', '100');
+            document.querySelector('#chart-container').appendChild(canvas);
+
+
             var ctx = document.getElementById('myChart').getContext('2d');
             var chart = new Chart(ctx, {
                 // The type of chart we want to create
@@ -17,15 +25,21 @@
 
                 // The data for our dataset
                 data: {
-                    /*labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],*/
                     labels: labels,
                     datasets: [{
                         label: '7-day averages for the past week',
                         backgroundColor: 'rgb(0, 0, 0)',
-                        borderColor: 'rgb(0, 0, 0)',
-                        /*data: [0, 10, 5, 2, 20, 30, 45]*/
+                        borderColor: 'rgb(0, 0, 0)',                       
                         data: data,
-                        fill: false
+                        fill: false,
+                        lineTension: 0
+                    }, {
+                        label: 'Fitted line',
+                        backgroundColor: 'rgb(255, 0, 0)',
+                        borderColor: 'rgb(255, 0, 0)',               
+                        data: line,
+                        fill: false,
+                        lineTension: 0
                     }]
                 },
 
@@ -33,8 +47,22 @@
                 // Configuration options go here
                 options: {}
             });
+            chart.clear();
+            chart.render({
+                duration: 800,
+                lazy: false
+                
+            });
         }
-            window.makeDailyGraph = (labels, data) => {
+        window.makeDailyGraph = (labels, data) => {
+
+            document.getElementById("myDailyChart").remove();
+            let canvas = document.createElement('canvas');
+            canvas.setAttribute('id', 'myDailyChart');
+            // canvas.setAttribute('width', '300');
+            // canvas.setAttribute('height', '100');
+            document.querySelector('#chart-container').appendChild(canvas);
+
                 var ctx = document.getElementById('myDailyChart').getContext('2d');
                 var chart = new Chart(ctx, {
                     // The type of chart we want to create
@@ -45,12 +73,13 @@
                         /*labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],*/
                         labels: labels,
                         datasets: [{
-                            label: 'Number of New Cases for past week',
+                            label: 'Number of New Cases for past 2 weeks',
                             backgroundColor: 'rgb(0, 0, 0)',
                             borderColor: 'rgb(0, 0, 0)',
                             /*data: [0, 10, 5, 2, 20, 30, 45]*/
                             data: data,
-                            fill: false
+                            fill: false,
+                            lineTension: 0
                         }]
                     },
 
@@ -58,6 +87,8 @@
                     // Configuration options go here
                     options: {}
                 });
+
+                chart.update();
             }
             
         </script>
